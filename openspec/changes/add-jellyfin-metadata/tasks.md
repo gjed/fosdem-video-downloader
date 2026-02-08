@@ -14,17 +14,19 @@
 - [x] 3.1 Update `get_output_path()` Jellyfin layout from `<room>` to `<track>` grouping
 - [x] 3.2 Fall back to `location` when `track` is empty (ICS mode)
 
-## 4. Add NFO Sidecar Generation
+## 4. Add NFO Sidecar Generation (TV Series Model)
 
-- [x] 4.1 Create `fosdem_video/nfo.py` with `generate_nfo(talk) -> str` function
-- [x] 4.2 Map metadata to Jellyfin NFO tags: title, plot, aired, runtime, genre (track), studio (room), tag, director (persons), trailer (event URL)
-- [x] 4.3 Collapse remaining metadata (slug, feedback URL, language, type) into the plot description
-- [x] 4.4 Add `write_nfo(talk, output_path)` that writes the NFO alongside the video file
+- [x] 4.1 Create `fosdem_video/nfo.py` with three-level NFO generation
+- [x] 4.2 `generate_tvshow_nfo()` — `<tvshow>` with title, plot, premiered, studio, genre, tags, uniqueid, namedseason per track
+- [x] 4.3 `generate_season_nfo()` — `<season>` with title (track name), seasonnumber, plot
+- [x] 4.4 `generate_episode_nfo()` — `<episodedetails>` with title, showtitle, plot (abstract + description + metadata block), aired, runtime, studio, uniqueid, trailer, director (speakers)
+- [x] 4.5 `write_tvshow_nfo()`, `write_season_nfo()`, `write_episode_nfo()` helper functions
 
 ## 5. Wire NFO Writing into Download Pipeline
 
-- [x] 5.1 In `process_video()`, after successful download, call `write_nfo()` when `--jellyfin` is enabled
-- [x] 5.2 Only write NFO when the talk has metadata (year mode); skip silently for ICS mode
+- [x] 5.1 Write `tvshow.nfo` and `season.nfo` during `create_dirs()` when `--jellyfin` is enabled and talks have metadata
+- [x] 5.2 Write `<slug>.nfo` in `process_video()` after successful download when `--jellyfin` is enabled and talk has title
+- [x] 5.3 Only write NFOs when talks have rich metadata (year mode); skip silently for ICS mode
 
 ## 6. Rename --location to --track
 

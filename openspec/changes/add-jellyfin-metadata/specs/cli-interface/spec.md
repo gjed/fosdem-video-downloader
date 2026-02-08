@@ -21,12 +21,12 @@ The CLI SHALL accept a `--track <name>` option that filters talks by track name 
 
 ### Requirement: Jellyfin-Compatible Output Layout
 
-The CLI SHALL accept a `--jellyfin` flag that organises downloaded files into a folder hierarchy compatible with Jellyfin media server. When enabled, the output structure SHALL be `<output>/Fosdem (<year>)/<track>/<video_name>/<video_file>` where `<track>` is the FOSDEM track name and `<video_file>` includes the video, optional `.vtt` subtitle, and optional `.nfo` metadata sidecar. When `--jellyfin` is not provided, the default flat layout (`<output>/<year>/<slug>.<ext>`) SHALL be used. When track metadata is not available (ICS mode), the system SHALL fall back to the `location` field as the grouping directory.
+The CLI SHALL accept a `--jellyfin` flag that organises downloaded files into a folder hierarchy compatible with Jellyfin media server, following the TV series model. When enabled with `--year`, the output structure SHALL be `<output>/Fosdem (<year>)/<track>/<slug>/<slug>.<ext>` where each FOSDEM edition maps to a TV show, each track to a season, and each talk to an episode. The system SHALL generate NFO metadata sidecars at all three levels: `tvshow.nfo` in the show root, `season.nfo` in each track directory, and `<slug>.nfo` alongside each video. When `--jellyfin` is not provided, the default flat layout (`<output>/<year>/<slug>.<ext>`) SHALL be used. When track metadata is not available (ICS mode), the system SHALL fall back to the `location` field as the grouping directory and no NFO files SHALL be generated.
 
-#### Scenario: Jellyfin layout for a single video
+#### Scenario: Jellyfin TV series layout for year mode
 
-- **WHEN** the user runs `fosdem-video --year 2026 --talk my_talk --jellyfin`
-- **THEN** the video is saved to `<output>/Fosdem (2026)/<track>/my_talk/my_talk.mp4`, the VTT (if enabled) to `<output>/Fosdem (2026)/<track>/my_talk/my_talk.vtt`, and the NFO to `<output>/Fosdem (2026)/<track>/my_talk/my_talk.nfo`
+- **WHEN** the user runs `fosdem-video --year 2026 --jellyfin`
+- **THEN** the output contains `tvshow.nfo` in `Fosdem (2026)/`, `season.nfo` in each track directory, and for each talk: the video, optional VTT, and `<slug>.nfo` in `Fosdem (2026)/<track>/<slug>/`
 
 #### Scenario: Jellyfin layout with WebM format
 
@@ -41,4 +41,4 @@ The CLI SHALL accept a `--jellyfin` flag that organises downloaded files into a 
 #### Scenario: Jellyfin layout falls back to location for ICS mode
 
 - **WHEN** the user runs `fosdem-video --ics bookmarks.ics --jellyfin`
-- **THEN** the system uses the `location` field instead of track, and no `.nfo` files are generated
+- **THEN** the system uses the `location` field instead of track, and no `.nfo` files are generated at any level

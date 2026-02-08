@@ -73,18 +73,22 @@ uv run fosdem-video --ics bookmarks.ics --format av1.webm
 uv run fosdem-video --year 2025 --jellyfin
 ```
 
-This produces a directory structure grouped by track (when using `--year`) with
-Jellyfin-compatible `.nfo` metadata sidecars:
+This produces a directory structure modelled as a Jellyfin TV series — each
+FOSDEM edition is a show, each track is a season, and each talk is an episode.
+NFO metadata sidecars are generated at all three levels:
 
 ```text
 fosdem_videos/
   Fosdem (2025)/
+    tvshow.nfo
     Containers/
+      season.nfo
       my_talk_slug/
         my_talk_slug.mp4
         my_talk_slug.vtt
         my_talk_slug.nfo
     Go/
+      season.nfo
       another_talk/
         another_talk.mp4
         another_talk.vtt
@@ -92,7 +96,7 @@ fosdem_videos/
 ```
 
 When used with `--ics` (no track metadata available), the layout falls back to
-the room/location name and `.nfo` files are not generated.
+the room/location name and no `.nfo` files are generated.
 
 ### Command Line Arguments
 
@@ -115,8 +119,8 @@ the room/location name and `.nfo` files are not generated.
 
 - `-o, --output <path>` — Root output directory
   (default: `./fosdem_videos`)
-- `--jellyfin` — Jellyfin-compatible folder layout with track-based grouping
-  and `.nfo` metadata sidecars (NFO generated with `--year` only)
+- `--jellyfin` — Jellyfin TV series layout with track-based seasons and
+  `.nfo` metadata at show, season, and episode levels (`--year` only)
 
 **General:**
 

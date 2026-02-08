@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 from fosdem_video.models import HTTP_NOT_FOUND, HTTP_OK, Talk
-from fosdem_video.nfo import write_nfo
+from fosdem_video.nfo import write_episode_nfo, write_season_nfo, write_tvshow_nfo
 
 logger = logging.getLogger(__name__)
 
@@ -110,10 +110,40 @@ def is_downloaded(output_dir: Path, talk: Talk, fmt: str, *, jellyfin: bool = Fa
 
 
 def create_dirs(output_dir: Path, talks: list[Talk], *, jellyfin: bool = False) -> None:
-    """Create output directories for each talk."""
+    """
+    Create output directories for each talk.
+
+    When *jellyfin* is True and talks carry rich metadata (year mode), this
+    also writes ``tvshow.nfo`` in the show root and ``season.nfo`` in each
+    track directory so that Jellyfin recognises the folder hierarchy as a
+    TV series.
+    """
+    has_metadata = jellyfin and any(t.title for t in talks)
+    all_tracks = sorted({t.track for t in talks if t.track}) if has_metadata else []
+    show_dir_written: set[str] = set()
+    season_dirs_written: set[str] = set()
+
     for talk in talks:
         folder = get_output_path(output_dir, talk, "mp4", jellyfin=jellyfin).parent
         folder.mkdir(parents=True, exist_ok=True)
+
+        if not has_metadata:
+            continue
+
+        # Write tvshow.nfo once per show root
+        show_dir = folder.parent.parent  # …/Fosdem (<year>)/
+        show_key = str(show_dir)
+        if show_key not in show_dir_written:
+            write_tvshow_nfo(show_dir, talk.year, all_tracks)
+            show_dir_written.add(show_key)
+
+        # Write season.nfo once per track directory
+        season_dir = folder.parent  # …/Fosdem (<year>)/<track>/
+        season_key = str(season_dir)
+        if season_key not in season_dirs_written and talk.track:
+            season_num = all_tracks.index(talk.track) + 1
+            write_season_nfo(season_dir, talk.year, talk.track, season_num)
+            season_dirs_written.add(season_key)
 
 
 def download_fosdem_videos(  # noqa: PLR0913
@@ -133,7 +163,7 @@ def download_fosdem_videos(  # noqa: PLR0913
         if success and not no_vtt:
             download_vtt(talk.url, file_path)
         if success and jellyfin and talk.title:
-            write_nfo(talk, file_path)
+            write_episode_nfo(talk, file_path)
         return success
 
     with ThreadPoolExecutor(max_workers=num_workers) as executor:

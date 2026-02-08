@@ -14,34 +14,58 @@ The `Talk` data model SHALL include optional metadata fields populated from the 
 - **WHEN** a talk is parsed from an ICS file
 - **THEN** metadata fields default to empty strings and empty lists, and the system continues to function normally
 
-### Requirement: Jellyfin NFO Sidecar Generation
+### Requirement: Jellyfin NFO Sidecar Generation (TV Series Model)
 
-When `--jellyfin` is enabled and the talk has rich metadata (year mode), the system SHALL generate a Jellyfin-compatible `.nfo` XML sidecar file alongside each downloaded video. The NFO file SHALL be named `<slug>.nfo` and placed in the same per-talk subfolder as the video. The NFO SHALL map FOSDEM metadata to Jellyfin tags as follows:
+When `--jellyfin` is enabled and talks have rich metadata (year mode), the system SHALL generate Jellyfin-compatible `.nfo` XML sidecar files at three levels matching the TV series model:
+
+**Show level** — `tvshow.nfo` (root tag `<tvshow>`) placed in the show root directory `Fosdem (<year>)/`:
+
+- `title` / `showtitle` — `FOSDEM <year>`
+- `plot` — a short description of the FOSDEM conference
+- `premiered` — `<year>-02-01`
+- `studio` — `FOSDEM`
+- `genre` — `Technology`
+- `tag` — `conference`, `open-source`
+- `uniqueid` (type `fosdem`) — `fosdem-<year>`
+- `namedseason` — one entry per track, sorted alphabetically
+
+**Season level** — `season.nfo` (root tag `<season>`) placed in each track directory `Fosdem (<year>)/<track>/`:
+
+- `title` — track name
+- `seasonnumber` — the track's position in the sorted track list
+- `plot` — a brief description identifying the track
+
+**Episode level** — `<slug>.nfo` (root tag `<episodedetails>`) placed alongside each downloaded video:
 
 - `title` — talk title
+- `showtitle` — `FOSDEM <year>`
 - `plot` — abstract, followed by description if present, followed by a metadata block containing slug, feedback URL, language, and event type
 - `aired` — talk date (ISO format)
 - `runtime` — duration in minutes
-- `genre` — track name
 - `studio` — room name
-- `tag` — event type, language, and slug as separate `<tag>` elements
-- `director` — each person/speaker as a separate `<director>` element
+- `uniqueid` (type `fosdem`) — the talk slug
 - `trailer` — event URL
+- `director` — each person/speaker as a separate `<director>` element
 
-#### Scenario: NFO generated in Jellyfin mode
+#### Scenario: All three NFO levels generated in Jellyfin year mode
 
 - **WHEN** `--jellyfin` is enabled and `--year` is used
-- **THEN** a `.nfo` file is written alongside each successfully downloaded video
+- **THEN** `tvshow.nfo` is written in the show root, `season.nfo` in each track directory, and `<slug>.nfo` alongside each successfully downloaded video
 
-#### Scenario: NFO content includes all mapped metadata
+#### Scenario: Episode NFO content includes all mapped metadata
 
 - **WHEN** a talk has title, track, persons, abstract, date, and duration
-- **THEN** the NFO file contains the corresponding `<title>`, `<genre>`, `<director>`, `<plot>`, `<aired>`, and `<runtime>` elements
+- **THEN** the episode NFO file contains the corresponding `<title>`, `<showtitle>`, `<director>`, `<plot>`, `<aired>`, and `<runtime>` elements
+
+#### Scenario: TVShow NFO lists all tracks as named seasons
+
+- **WHEN** multiple tracks are present in the download set
+- **THEN** the `tvshow.nfo` contains one `<namedseason>` element per track, numbered consecutively
 
 #### Scenario: NFO not generated in ICS mode
 
 - **WHEN** `--ics` is used (no rich metadata available)
-- **THEN** no `.nfo` files are generated
+- **THEN** no `.nfo` files are generated at any level
 
 #### Scenario: NFO not generated without Jellyfin flag
 
@@ -52,7 +76,7 @@ When `--jellyfin` is enabled and the talk has rich metadata (year mode), the sys
 
 ### Requirement: Jellyfin Output Path Construction
 
-When `--jellyfin` is enabled, the system SHALL write each video (and its optional VTT and NFO) into a per-talk subfolder following the pattern `<output>/Fosdem (<year>)/<track>/<slug>/<slug>.<ext>`. The `<track>` SHALL be the track name from the talk metadata. When track is not available (ICS mode), the system SHALL fall back to the `location` field. Directory creation SHALL happen automatically before downloads begin.
+When `--jellyfin` is enabled, the system SHALL write each video (and its optional VTT and NFO) into a per-talk subfolder following the pattern `<output>/Fosdem (<year>)/<track>/<slug>/<slug>.<ext>`. The `<track>` SHALL be the track name from the talk metadata. When track is not available (ICS mode), the system SHALL fall back to the `location` field. Directory creation SHALL happen automatically before downloads begin. When talks carry rich metadata (year mode), the system SHALL also write `tvshow.nfo` in the show root and `season.nfo` in each track directory during directory creation.
 
 #### Scenario: Jellyfin directory tree uses track
 
@@ -69,7 +93,7 @@ When `--jellyfin` is enabled, the system SHALL write each video (and its optiona
 - **WHEN** `--jellyfin` is enabled and `--no-vtt` is not set
 - **THEN** the `.vtt` file is saved in the same per-talk subfolder as the video file
 
-#### Scenario: NFO placed alongside video in Jellyfin layout
+#### Scenario: Show and season NFO written during directory creation
 
 - **WHEN** `--jellyfin` is enabled and `--year` is used
-- **THEN** the `.nfo` file is saved in the same per-talk subfolder as the video file
+- **THEN** `tvshow.nfo` is written once in `Fosdem (<year>)/` and `season.nfo` once in each track directory, alongside the per-episode `<slug>.nfo` files
