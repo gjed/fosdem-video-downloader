@@ -40,12 +40,14 @@ def parse_ics_file(ics_path: str) -> list[Talk]:
     """Extract video information from ICS file."""
     path = Path(f"./{ics_path}")
     if not path.exists() or path.stat().st_size == 0:
-        raise ValueError(f"Invalid ICS file: {path} (missing or empty)")
+        msg = f"Invalid ICS file: {path} (missing or empty)"
+        raise ValueError(msg)
 
     with path.open("rb") as f:
         content = f.read().strip()
         if not content:
-            raise ValueError("ICS content is empty after stripping")
+            msg = "ICS content is empty after stripping"
+            raise ValueError(msg)
         cal = Calendar.from_ical(content)
 
     talks = []
@@ -75,7 +77,7 @@ def download_video(url: str, output_path: Path) -> bool:
         if response.status_code == 404:
             logger.warning("Video not found (404): %s", url)
             return False
-        elif response.status_code != 200:
+        if response.status_code != 200:
             response.raise_for_status()
 
         total_size = int(response.headers.get("content-length", 0))
@@ -86,7 +88,7 @@ def download_video(url: str, output_path: Path) -> bool:
             f.writelines(response.iter_content(block_size))
 
         logger.info("Downloaded %s", output_path.name)
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to download %s", url)
         with contextlib.suppress(FileNotFoundError):
             # If something happened mid download we should remove the incomplete file
@@ -137,7 +139,9 @@ def parse_arguments() -> argparse.Namespace:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument("ics_file", type=Path, help="Path to the FOSDEM schedule ICS file")
+    parser.add_argument(
+        "ics_file", type=Path, help="Path to the FOSDEM schedule ICS file"
+    )
 
     parser.add_argument(
         "-o",
@@ -147,9 +151,13 @@ def parse_arguments() -> argparse.Namespace:
         help="Directory to save downloaded videos",
     )
 
-    parser.add_argument("-w", "--workers", type=int, default=3, help="Number of concurrent downloads")
+    parser.add_argument(
+        "-w", "--workers", type=int, default=3, help="Number of concurrent downloads"
+    )
 
-    parser.add_argument("--dry-run", action="store_true", help="Print video URLs without downloading")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Print video URLs without downloading"
+    )
 
     parser.add_argument(
         "--log-level",

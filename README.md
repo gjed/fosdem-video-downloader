@@ -54,8 +54,8 @@ uv run python fosdem_video.py bookmarks.ics \
 ## Getting Your Bookmarks
 
 1. Use the FOSDEM mobile app to bookmark talks you're interested in.
-2. Export your bookmarks as an ICS file from the app.
-3. Use this ICS file as input for the tool.
+1. Export your bookmarks as an ICS file from the app.
+1. Use this ICS file as input for the tool.
 
 ## Development
 

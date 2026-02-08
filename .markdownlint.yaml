@@ -1,0 +1,19 @@
+# markdownlint configuration
+# https://github.com/DavidAnson/markdownlint/blob/main/schema/.markdownlint.yaml
+
+default: true
+
+# MD013 - Line length - disabled, not practical for prose
+MD013: true
+
+# MD033 - Inline HTML - allow common elements
+MD033:
+  allowed_elements:
+    - br
+    - details
+    - summary
+    - img
+    - a
+
+# MD041 - First line should be a top-level heading - disabled for non-doc files
+MD041: true
