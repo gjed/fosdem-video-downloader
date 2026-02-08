@@ -124,7 +124,7 @@ wheels = [
 [[package]]
 name = "fosdem-video-downloader"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "icalendar" },
     { name = "python-dateutil" },

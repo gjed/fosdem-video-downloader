@@ -1,0 +1,1 @@
+"""FOSDEM video downloader package."""
