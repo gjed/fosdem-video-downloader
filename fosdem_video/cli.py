@@ -146,21 +146,33 @@ def main() -> None:
     # Discover talks from the selected input mode
     if args.ics:
         logger.info("Parsing ICS file %s", args.ics)
-        talks = parse_ics_file(args.ics, fmt=fmt)
+        all_talks = parse_ics_file(args.ics, fmt=fmt)
+        talks = all_talks
     else:
         logger.info("Fetching schedule for FOSDEM %s", args.year)
-        talks = parse_schedule_xml(
-            args.year,
-            track=args.track,
-            talk_id=args.talk,
-            fmt=fmt,
-        )
+        # Always fetch ALL talks first so that the episode index reflects
+        # the full schedule.  Season numbers are derived from the
+        # alphabetical position of each track across the entire conference,
+        # not just the downloaded subset.
+        all_talks = parse_schedule_xml(args.year, fmt=fmt)
+        talks = all_talks
+
+        # Apply --track / --talk filters *after* building the full list.
+        if args.track:
+            talks = [t for t in all_talks if t.track.lower() == args.track.lower()]
+        if args.talk:
+            talks = [t for t in talks if t.id == args.talk]
 
     logger.info("Found %s talks", len(talks))
 
-    # Build episode index from *all* discovered talks so that episode
-    # numbers remain stable regardless of which files are already downloaded.
-    episode_index = _build_episode_index(talks) if args.jellyfin else {}
+    # Build episode index from the FULL talk list so that season numbers
+    # reflect each track's position in the complete schedule — not just
+    # the filtered subset.  For ICS mode there is no unfiltered list, so
+    # we fall back to whatever was parsed.
+    if args.jellyfin:
+        episode_index = _build_episode_index(all_talks)
+    else:
+        episode_index = {}
 
     # Regenerate NFOs and images for all talks (including already-downloaded)
     if args.regenerate_nfo:

@@ -157,7 +157,6 @@ def create_dirs(
     TV series.
     """
     has_metadata = jellyfin and any(t.title for t in talks)
-    all_tracks = sorted({t.track for t in talks if t.track}) if has_metadata else []
     show_dir_written: set[str] = set()
     season_dirs_written: set[str] = set()
 
@@ -183,11 +182,14 @@ def create_dirs(
             copy_show_images(assets_dir, show_dir, talk.year)
             show_dir_written.add(show_key)
 
-        # Write season.nfo once per track directory
+        # Write season.nfo once per track directory — use the season
+        # number from the episode_index (derived from the full schedule)
+        # so it remains correct even when downloading a subset of tracks.
         season_dir = folder.parent  # …/Fosdem (<year>)/<track>/
         season_key = str(season_dir)
         if season_key not in season_dirs_written and talk.track:
-            season_num = all_tracks.index(talk.track) + 1
+            ep_info = (episode_index or {}).get(talk.id)
+            season_num = ep_info[0] if ep_info else 0
             write_season_nfo(season_dir, talk.year, talk.track, season_num)
             assets_dir = get_assets_dir()
             copy_season_images(assets_dir, season_dir, talk.year, talk.track)
@@ -241,7 +243,6 @@ def regenerate_nfos(
     if episode_index is None:
         episode_index = _build_episode_index(talks)
 
-    all_tracks = sorted({t.track for t in talks if t.track})
     show_dir_written: set[str] = set()
     season_dirs_written: set[str] = set()
     count = 0
@@ -268,12 +269,14 @@ def regenerate_nfos(
             copy_show_images(assets_dir, show_dir, talk.year)
             show_dir_written.add(show_key)
 
-        # Write season.nfo once per track directory
+        # Write season.nfo once per track directory — use the season
+        # number from the episode_index (derived from the full schedule).
         season_dir = file_path.parent.parent
         season_key = str(season_dir)
         if season_key not in season_dirs_written and talk.track:
             season_dir.mkdir(parents=True, exist_ok=True)
-            season_num = all_tracks.index(talk.track) + 1
+            ep_info = episode_index.get(talk.id)
+            season_num = ep_info[0] if ep_info else 0
             write_season_nfo(season_dir, talk.year, talk.track, season_num)
             assets_dir = get_assets_dir()
             copy_season_images(assets_dir, season_dir, talk.year, talk.track)
