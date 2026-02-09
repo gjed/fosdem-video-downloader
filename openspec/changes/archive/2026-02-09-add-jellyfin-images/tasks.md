@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD041 -->
+
 ## 1. Image resolution module
 
 - [x] 1.1 Create `fosdem_video/images.py` with an `resolve_asset` function

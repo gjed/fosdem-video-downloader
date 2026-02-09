@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD041 -->
+
 ## Context
 
 Jellyfin recognises metadata images placed alongside NFO files in the media

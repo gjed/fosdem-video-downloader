@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD041 -->
+
 ## ADDED Requirements
 
 ### Requirement: Jellyfin Show-Level Metadata Images
