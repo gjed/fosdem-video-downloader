@@ -8,7 +8,6 @@ import re
 import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
 
-import requests
 from icalendar import Calendar
 
 from fosdem_video.models import (
@@ -92,9 +91,14 @@ def parse_schedule_xml(
         fmt: Video format extension (e.g. "mp4" or "av1.webm").
 
     """
+    from fosdem_video.download import (  # avoid circular import
+        _build_session,
+    )
+
     url = f"https://fosdem.org/{year}/schedule/xml"
     logger.info("Fetching schedule XML from %s", url)
-    response = requests.get(url, timeout=30)
+    session = _build_session()
+    response = session.get(url, timeout=30)
     if response.status_code != HTTP_OK:
         msg = f"Failed to fetch schedule XML for {year}: HTTP {response.status_code}"
         raise RuntimeError(msg)

@@ -6,7 +6,9 @@ Defines how the tool discovers, downloads, and organises
 FOSDEM talk videos, including schedule XML parsing, URL
 construction, subtitle handling, file naming, output
 directory layouts, and Jellyfin NFO sidecar generation.
+
 ## Requirements
+
 ### Requirement: Schedule XML Talk Discovery
 
 The system SHALL fetch and parse the FOSDEM Pentabarf
@@ -439,4 +441,3 @@ placement logic as during initial directory creation.
 - **WHEN** the user runs with `--regenerate-nfo --jellyfin --year 2026`
 - **THEN** show-level and season-level images are re-copied from `assets/`
   alongside the regenerated NFO files
-

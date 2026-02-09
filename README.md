@@ -1,5 +1,13 @@
 # FOSDEM Video Downloader
 
+> **Please be kind to FOSDEM's infrastructure.** FOSDEM is a free, volunteer-run
+> conference. The video hosting servers are provided on a best-effort basis.
+> This tool ships with conservative defaults (2 concurrent workers, 1 s delay
+> between downloads, automatic retry with backoff) so it does not put
+> unnecessary load on those servers. Please do **not** crank up the concurrency
+> or remove the delay unless you know what you are doing. If you are downloading
+> a large number of talks, consider running the tool during off-peak hours.
+
 A Python tool to download FOSDEM conference videos. It supports two input
 modes: parsing an ICS schedule file (exported from the
 [FOSDEM mobile app](https://github.com/cbeyls/fosdem-companion-android)), or
@@ -11,7 +19,7 @@ XML.
 - Download videos from your bookmarked talks (ICS file) or an entire FOSDEM
   year
 - Filter by track name or a single talk slug when using year mode
-- Choose between `.mp4` (default) and `.av1.webm` video formats
+- Choose between `.mp4` and `.av1.webm` (default) video formats
 - Automatically download `.vtt` subtitles alongside each video (opt-out with
   `--no-vtt`)
 - Jellyfin-compatible folder layout for media server integration
@@ -112,7 +120,7 @@ the room/location name and no `.nfo` files are generated.
 
 **Format and subtitles:**
 
-- `--format {mp4,av1.webm}` — Video format (default: `mp4`)
+- `--format {mp4,av1.webm}` — Video format (default: `av1.webm`)
 - `--no-vtt` — Skip downloading `.vtt` subtitle files
 
 **Output:**
@@ -124,9 +132,33 @@ the room/location name and no `.nfo` files are generated.
 
 **General:**
 
-- `-w, --workers <n>` — Concurrent downloads (default: `3`)
+- `-w, --workers <n>` — Concurrent downloads (default: `2`)
+- `--delay <seconds>` — Pause between downloads per worker (default: `1.0`)
 - `--dry-run` — Print video URLs without downloading
 - `--log-level` — Logging level (default: `INFO`)
+
+## Server Politeness
+
+FOSDEM is a free conference that relies entirely on volunteer effort, including
+the infrastructure that hosts the video recordings. This tool is designed to be
+a good citizen:
+
+- **Low concurrency** — defaults to 2 parallel downloads.
+- **Inter-request delay** — a 1-second pause between each download (per
+  worker) to spread the load.
+- **Retry with exponential back-off** — transient errors (429, 500, 502, 503)
+  are retried up to 3 times with increasing delays instead of hammering the
+  server.
+- **Identifiable User-Agent** — every request carries a descriptive
+  `User-Agent` header so server operators can identify and contact the project
+  if needed.
+- **Connection reuse** — a single `requests.Session` is shared per download
+  batch, reducing TCP/TLS overhead for the server.
+- **Skip already downloaded** — talks that already exist on disk are
+  automatically skipped.
+
+You can adjust `--workers` and `--delay` if needed, but please be considerate
+of the shared infrastructure.
 
 ## Getting Your Bookmarks
 

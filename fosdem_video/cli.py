@@ -9,6 +9,8 @@ from sys import stdout
 
 from fosdem_video.discovery import parse_ics_file, parse_schedule_xml
 from fosdem_video.download import (
+    DEFAULT_DELAY,
+    DEFAULT_WORKERS,
     _build_episode_index,
     create_dirs,
     download_fosdem_videos,
@@ -87,8 +89,14 @@ def parse_arguments() -> argparse.Namespace:
         "-w",
         "--workers",
         type=int,
-        default=3,
+        default=DEFAULT_WORKERS,
         help="Number of concurrent downloads",
+    )
+    parser.add_argument(
+        "--delay",
+        type=float,
+        default=DEFAULT_DELAY,
+        help="Seconds to wait between downloads (per worker) to avoid overloading the server",
     )
     parser.add_argument(
         "--dry-run",
@@ -169,10 +177,7 @@ def main() -> None:
     # reflect each track's position in the complete schedule — not just
     # the filtered subset.  For ICS mode there is no unfiltered list, so
     # we fall back to whatever was parsed.
-    if args.jellyfin:
-        episode_index = _build_episode_index(all_talks)
-    else:
-        episode_index = {}
+    episode_index = _build_episode_index(all_talks) if args.jellyfin else {}
 
     # Regenerate NFOs and images for all talks (including already-downloaded)
     if args.regenerate_nfo:
@@ -208,6 +213,7 @@ def main() -> None:
         output_dir=args.output,
         fmt=fmt,
         num_workers=args.workers,
+        delay=args.delay,
         no_vtt=args.no_vtt,
         jellyfin=args.jellyfin,
         episode_index=episode_index,
