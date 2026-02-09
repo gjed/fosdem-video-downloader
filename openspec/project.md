@@ -29,7 +29,8 @@ concurrent downloads and dry-run mode.
 
 - Single-file CLI application (`fosdem_video.py`)
 - `Talk` NamedTuple as the core data model (fields: `url`, `year`, `id`)
-- Functional style — standalone functions for parsing, downloading, and directory creation
+- Functional style — standalone functions for parsing,
+  downloading, and directory creation
 - `ThreadPoolExecutor` for concurrent downloads
 - Logging via stdlib `logging`
 
@@ -58,7 +59,8 @@ concurrent downloads and dry-run mode.
 
 - Requires Python >= 3.12
 - Videos can be large; downloads use 1 MB chunked streaming
-- 404s on video URLs are expected (not all talks have recordings) and must not crash the tool
+- 404s on video URLs are expected (not all talks have
+  recordings) and must not crash the tool
 
 ## External Dependencies
 
