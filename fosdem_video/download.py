@@ -14,6 +14,7 @@ import requests
 if TYPE_CHECKING:
     from pathlib import Path
 
+from fosdem_video.images import copy_season_images, copy_show_images, get_assets_dir
 from fosdem_video.models import (
     HTTP_NOT_FOUND,
     HTTP_OK,
@@ -178,6 +179,8 @@ def create_dirs(
         show_key = str(show_dir)
         if show_key not in show_dir_written:
             write_tvshow_nfo(show_dir, talk.year)
+            assets_dir = get_assets_dir()
+            copy_show_images(assets_dir, show_dir, talk.year)
             show_dir_written.add(show_key)
 
         # Write season.nfo once per track directory
@@ -186,6 +189,8 @@ def create_dirs(
         if season_key not in season_dirs_written and talk.track:
             season_num = all_tracks.index(talk.track) + 1
             write_season_nfo(season_dir, talk.year, talk.track, season_num)
+            assets_dir = get_assets_dir()
+            copy_season_images(assets_dir, season_dir, talk.year, talk.track)
             season_dirs_written.add(season_key)
 
 
@@ -257,15 +262,21 @@ def regenerate_nfos(
         show_dir = file_path.parent.parent.parent
         show_key = str(show_dir)
         if show_key not in show_dir_written:
+            show_dir.mkdir(parents=True, exist_ok=True)
             write_tvshow_nfo(show_dir, talk.year)
+            assets_dir = get_assets_dir()
+            copy_show_images(assets_dir, show_dir, talk.year)
             show_dir_written.add(show_key)
 
         # Write season.nfo once per track directory
         season_dir = file_path.parent.parent
         season_key = str(season_dir)
         if season_key not in season_dirs_written and talk.track:
+            season_dir.mkdir(parents=True, exist_ok=True)
             season_num = all_tracks.index(talk.track) + 1
             write_season_nfo(season_dir, talk.year, talk.track, season_num)
+            assets_dir = get_assets_dir()
+            copy_season_images(assets_dir, season_dir, talk.year, talk.track)
             season_dirs_written.add(season_key)
 
         # Write episode NFO only when the video file exists

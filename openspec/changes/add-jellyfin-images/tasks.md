@@ -1,33 +1,33 @@
 ## 1. Image resolution module
 
-- [ ] 1.1 Create `fosdem_video/images.py` with an `resolve_asset` function
+- [x] 1.1 Create `fosdem_video/images.py` with an `resolve_asset` function
   that searches `assets/` for a given prefix, type, and optional number
   using the year-first, default-fallback resolution order
-- [ ] 1.2 Create `copy_show_images(assets_dir, show_dir, year)` that resolves
+- [x] 1.2 Create `copy_show_images(assets_dir, show_dir, year)` that resolves
   and copies all image types (primary, logo, backdrop, banner, thumb)
   to the show root using Jellyfin filenames (`poster`, `logo`, `backdrop`,
   `banner`, `thumb`) — including numbered backdrop variants
-- [ ] 1.3 Create `copy_season_images(assets_dir, season_dir, year, track)`
+- [x] 1.3 Create `copy_season_images(assets_dir, season_dir, year, track)`
   that resolves and copies season-level images using the track slug —
   target filenames: `cover`, `logo`, `backdrop`, `banner`, `thumb`
-- [ ] 1.4 Both functions SHALL log a warning per missing image type and a
+- [x] 1.4 Both functions SHALL log a warning per missing image type and a
   single warning if the `assets/` directory is missing
 
 ## 2. Integration into download pipeline
 
-- [ ] 2.1 In `create_dirs` (`download.py`), after writing `tvshow.nfo`, call
+- [x] 2.1 In `create_dirs` (`download.py`), after writing `tvshow.nfo`, call
   `copy_show_images` for each show root directory
-- [ ] 2.2 In `create_dirs`, after writing `season.nfo`, call
+- [x] 2.2 In `create_dirs`, after writing `season.nfo`, call
   `copy_season_images` for each track directory
-- [ ] 2.3 In `regenerate_nfos`, add the same image-copying calls after
+- [x] 2.3 In `regenerate_nfos`, add the same image-copying calls after
   NFO generation at show and season levels
 
 ## 3. Validation and cleanup
 
-- [ ] 3.1 Rename `assets/fosdem_logo.png` to `assets/fosdem-logo.png` to
+- [x] 3.1 Rename `assets/fosdem_logo.png` to `assets/fosdem-logo.png` to
   match the naming convention (or document that users should do this)
-- [ ] 3.2 Manual test: run with `--jellyfin --year 2026 --dry-run` and verify
+- [x] 3.2 Manual test: run with `--jellyfin --year 2026` and verify
   images are copied to the correct directories
-- [ ] 3.3 Manual test: run with `--regenerate-nfo --jellyfin --year 2026`
+- [x] 3.3 Manual test: run with `--regenerate-nfo --jellyfin --year 2026`
   and verify images are refreshed
-- [ ] 3.4 Verify warnings are logged for missing image types
+- [x] 3.4 Verify warnings are logged for missing image types
