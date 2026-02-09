@@ -145,12 +145,13 @@ def generate_season_nfo(
     """Build a ``<season>`` element for a FOSDEM track."""
     root = Element("season")
 
+    plot_text = f"FOSDEM {year} — {track} track.  All talks presented in the {track} developer room."
+
     SubElement(root, "title").text = track
     SubElement(root, "seasonnumber").text = str(season_number)
     SubElement(root, "lockdata").text = "true"
-    SubElement(root, "plot").text = (
-        f"FOSDEM {year} — {track} track.  All talks presented in the {track} developer room."
-    )
+    SubElement(root, "plot").text = plot_text
+    SubElement(root, "outline").text = plot_text
 
     return root
 
@@ -200,7 +201,7 @@ def generate_episode_nfo(
     SubElement(root, "lockdata").text = "true"
 
     if season_number:
-        SubElement(root, "season").text = str(season_number)
+        SubElement(root, "season").text = talk.track if talk.track else str(season_number)
         SubElement(root, "seasonnumber").text = str(season_number)
     if episode_number:
         SubElement(root, "episode").text = str(episode_number)

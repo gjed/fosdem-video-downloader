@@ -82,16 +82,21 @@ def slugify(text: str) -> str:
     return slug.strip("-")
 
 
-def display_name(talk: Talk, episode_number: int) -> str:
+def display_name(
+    talk: Talk,
+    episode_number: int,
+    season_number: int = 0,
+) -> str:
     """
     Build the canonical display name used for folders and files.
 
-    Format: ``fosdem-<year>-<track>-E<nn>-<title>`` where ``<track>``
-    and ``<title>`` are slugified.  Falls back to the raw ``talk.id``
-    when track or title metadata is unavailable.
+    Format: ``FOSDEM <year> S<ss>E<ee> <title>`` which follows the
+    Jellyfin ``SxxExx`` naming convention so the filename parser and
+    NFO metadata agree on season/episode numbers.
+
+    Falls back to the raw ``talk.id`` when track or title metadata is
+    unavailable.
     """
     if not talk.track or not talk.title:
         return talk.id
-    track_slug = slugify(talk.track)
-    title_slug = slugify(talk.title)
-    return f"fosdem-{talk.year}-{track_slug}-E{episode_number:02d}-{title_slug}"
+    return f"FOSDEM {talk.year} S{season_number:02d}E{episode_number:02d} {talk.title}"

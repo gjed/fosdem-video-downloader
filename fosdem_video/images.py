@@ -22,13 +22,12 @@ _SHOW_IMAGE_TYPES: list[tuple[str, str]] = [
 ]
 
 # Jellyfin image types for the season level: (asset_type, target_name).
-# "poster" uses a dynamic target name (<season-name>-poster) built at copy time.
 _SEASON_IMAGE_TYPES: list[tuple[str, str]] = [
     ("primary", "cover"),
     ("logo", "logo"),
     ("backdrop", "backdrop"),
     ("banner", "banner"),
-    ("poster", ""),
+    ("poster", "poster"),
 ]
 
 # Location of the bundled assets directory (sibling of fosdem_video/).
@@ -209,10 +208,7 @@ def copy_season_images(
                 year,
             )
             continue
-        # Poster images use <season-name>-poster as the target filename.
-        target_base = (
-            f"{season_dir.name}-poster" if asset_type == "poster" else season_target
-        )
+        target_base = season_target
         for idx, src in enumerate(found):
             ext = src.suffix.lstrip(".")
             target_name = _jellyfin_target_name(target_base, idx, ext)

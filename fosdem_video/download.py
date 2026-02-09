@@ -103,19 +103,24 @@ def get_output_path(
         jellyfin: When True, use Jellyfin-compatible folder structure.
         episode_index: Mapping of ``talk.id`` to ``(season_number,
             episode_number)``.  When provided in Jellyfin mode the
-            folder and file use the canonical display name
-            ``fosdem-<year>-<track>-E<nn>-<title>``.
+            season folder uses ``Season <nn>`` and the episode folder
+            and file use ``FOSDEM <year> S<ss>E<ee> <title>``.
 
     """
     if jellyfin:
-        group = sanitise_path_component(talk.track if talk.track else talk.location)
         ep_info = (episode_index or {}).get(talk.id)
         if ep_info:
-            _season_num, ep_num = ep_info
-            name = display_name(talk, ep_num)
+            season_num, ep_num = ep_info
+            season_folder = sanitise_path_component(talk.track)
+            name = sanitise_path_component(
+                display_name(talk, ep_num, season_num),
+            )
         else:
+            season_folder = sanitise_path_component(
+                talk.track if talk.track else talk.location,
+            )
             name = talk.id
-        return output_dir / f"Fosdem ({talk.year})" / group / name / f"{name}.{fmt}"
+        return output_dir / f"Fosdem ({talk.year})" / season_folder / name / f"{name}.{fmt}"
     return output_dir / talk.year / f"{talk.id}.{fmt}"
 
 
