@@ -162,7 +162,7 @@ def main() -> None:
     # numbers remain stable regardless of which files are already downloaded.
     episode_index = _build_episode_index(talks) if args.jellyfin else {}
 
-    # Regenerate NFOs for all talks (including already-downloaded) and exit
+    # Regenerate NFOs and images for all talks (including already-downloaded)
     if args.regenerate_nfo:
         regenerate_nfos(
             talks,
@@ -170,7 +170,6 @@ def main() -> None:
             fmt=fmt,
             episode_index=episode_index,
         )
-        return
 
     # Filter already-downloaded talks
     talks = [
