@@ -54,3 +54,44 @@ def normalise_location(raw: str) -> str:
     """
     cleaned = re.sub(r"[^\w\s]", "", raw)
     return cleaned.split()[0].lower() if cleaned.split() else raw.lower()
+
+
+def sanitise_path_component(name: str) -> str:
+    r"""
+    Make *name* safe for use as a single directory or file name component.
+
+    Replaces path separators (``/``, ``\\``), null bytes, and other
+    characters that are problematic on common filesystems (``:``, ``*``,
+    ``?``, ``"``, ``<``, ``>``, ``|``) with ``-``.  Collapses runs of
+    replacement hyphens and strips leading/trailing hyphens and whitespace.
+    """
+    cleaned = re.sub(r'[/\\:\*\?"<>|\x00]+', "-", name)
+    cleaned = re.sub(r"-{2,}", "-", cleaned)
+    return cleaned.strip("- ")
+
+
+def slugify(text: str) -> str:
+    """
+    Convert a free-form string into a URL/filesystem-safe slug.
+
+    Lowercases, replaces non-alphanumeric runs with single hyphens,
+    and strips leading/trailing hyphens.
+    """
+    slug = text.lower()
+    slug = re.sub(r"[^a-z0-9]+", "-", slug)
+    return slug.strip("-")
+
+
+def display_name(talk: Talk, episode_number: int) -> str:
+    """
+    Build the canonical display name used for folders and files.
+
+    Format: ``fosdem-<year>-<track>-E<nn>-<title>`` where ``<track>``
+    and ``<title>`` are slugified.  Falls back to the raw ``talk.id``
+    when track or title metadata is unavailable.
+    """
+    if not talk.track or not talk.title:
+        return talk.id
+    track_slug = slugify(talk.track)
+    title_slug = slugify(talk.title)
+    return f"fosdem-{talk.year}-{track_slug}-E{episode_number:02d}-{title_slug}"

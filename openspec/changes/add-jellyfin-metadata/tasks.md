@@ -17,16 +17,23 @@
 ## 4. Add NFO Sidecar Generation (TV Series Model)
 
 - [x] 4.1 Create `fosdem_video/nfo.py` with three-level NFO generation
-- [x] 4.2 `generate_tvshow_nfo()` — `<tvshow>` with title, plot, premiered, studio, genre, tags, uniqueid, namedseason per track
+- [x] 4.2 `generate_tvshow_nfo()` — `<tvshow>` with title, showtitle, plot, premiered, studio, genre, tags, uniqueid
 - [x] 4.3 `generate_season_nfo()` — `<season>` with title (track name), seasonnumber, plot
-- [x] 4.4 `generate_episode_nfo()` — `<episodedetails>` with title, showtitle, plot (abstract + description + metadata block), aired, runtime, studio, uniqueid, trailer, director (speakers)
+- [x] 4.4 `generate_episode_nfo()` — `<episodedetails>` with title, showtitle, season (track name), seasonnumber, episode, plot, aired, runtime, studio, uniqueid, trailer, director
 - [x] 4.5 `write_tvshow_nfo()`, `write_season_nfo()`, `write_episode_nfo()` helper functions
 
 ## 5. Wire NFO Writing into Download Pipeline
 
 - [x] 5.1 Write `tvshow.nfo` and `season.nfo` during `create_dirs()` when `--jellyfin` is enabled and talks have metadata
-- [x] 5.2 Write `<slug>.nfo` in `process_video()` after successful download when `--jellyfin` is enabled and talk has title
-- [x] 5.3 Only write NFOs when talks have rich metadata (year mode); skip silently for ICS mode
+- [x] 5.2 Pre-compute episode numbering per track (sorted by date+start) and season numbering (alphabetical track order)
+- [x] 5.3 Write `<slug>.nfo` in `process_video()` with season_number and episode_number
+- [x] 5.4 Only write NFOs when talks have rich metadata (year mode); skip silently for ICS mode
+
+## 9. Audit NFO Tags Against Jellyfin Docs
+
+- [x] 9.1 Cross-reference all emitted NFO tags against the Jellyfin "Reading metadata from .nfo files" table
+- [x] 9.2 Remove `<namedseason>` from tvshow.nfo (not in Jellyfin read or write table)
+- [x] 9.3 Update openspec video-download spec to remove namedseason references
 
 ## 6. Rename --location to --track
 

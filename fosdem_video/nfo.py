@@ -5,17 +5,17 @@ Generates three levels of NFO files matching the Jellyfin TV series model:
 
 - **tvshow.nfo** (``<tvshow>``) — placed in the show root directory
   ``Fosdem (<year>)/``.  Contains the FOSDEM edition title, a short
-  description of the conference, the premiere date, studio, and a
-  ``<namedseason>`` entry for every track that appears in the download set.
+  description of the conference, the premiere date, studio, genre, and tags.
 
 - **season.nfo** (``<season>``) — placed in each track directory
   ``Fosdem (<year>)/<track>/``.  Carries the track name as the season
-  title together with a brief description.
+  title, season number, and a brief description.
 
 - **<slug>.nfo** (``<episodedetails>``) — placed alongside the video file
   in the per-talk subfolder.  Maps talk metadata to episode-level tags:
-  title, showtitle, plot (abstract + description + extra metadata block),
-  aired, runtime, director (speakers), and a ``<uniqueid>`` for the slug.
+  title, showtitle, season, seasonnumber, episode, plot (abstract +
+  description + extra metadata block), aired, runtime, studio, director
+  (speakers), trailer, and a ``<uniqueid>`` for the slug.
 """
 
 from __future__ import annotations
@@ -105,7 +105,7 @@ def _write_xml(path: Path, root: Element) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def generate_tvshow_nfo(year: str, tracks: list[str]) -> Element:
+def generate_tvshow_nfo(year: str) -> Element:
     """Build a ``<tvshow>`` element for a FOSDEM edition."""
     root = Element("tvshow")
 
@@ -123,17 +123,12 @@ def generate_tvshow_nfo(year: str, tracks: list[str]) -> Element:
     uniqueid.set("default", "true")
     uniqueid.text = f"fosdem-{year}"
 
-    for idx, track_name in enumerate(sorted(set(tracks)), start=1):
-        ns = SubElement(root, "namedseason")
-        ns.set("number", str(idx))
-        ns.text = track_name
-
     return root
 
 
-def write_tvshow_nfo(show_dir: Path, year: str, tracks: list[str]) -> bool:
+def write_tvshow_nfo(show_dir: Path, year: str) -> bool:
     """Write ``tvshow.nfo`` into the show root directory."""
-    root = generate_tvshow_nfo(year, tracks)
+    root = generate_tvshow_nfo(year)
     return _write_xml(show_dir / "tvshow.nfo", root)
 
 
@@ -152,6 +147,7 @@ def generate_season_nfo(
 
     SubElement(root, "title").text = track
     SubElement(root, "seasonnumber").text = str(season_number)
+    SubElement(root, "lockdata").text = "true"
     SubElement(
         root, "plot"
     ).text = f"FOSDEM {year} — {track} track.  All talks presented in the {track} developer room."
@@ -181,12 +177,33 @@ def _add_episode_people(root: Element, talk: Talk) -> None:
         SubElement(root, "director").text = person
 
 
-def generate_episode_nfo(talk: Talk) -> Element:
-    """Build an ``<episodedetails>`` element for a single FOSDEM talk."""
+def generate_episode_nfo(
+    talk: Talk,
+    *,
+    season_number: int = 0,
+    episode_number: int = 0,
+) -> Element:
+    """
+    Build an ``<episodedetails>`` element for a single FOSDEM talk.
+
+    Args:
+        talk: The Talk to generate metadata for.
+        season_number: Alphabetical index of the track (1-based).
+        episode_number: Position of this talk within its track (1-based),
+            ordered by schedule date and start time.
+
+    """
     root = Element("episodedetails")
 
     SubElement(root, "title").text = talk.title
     SubElement(root, "showtitle").text = f"FOSDEM {talk.year}"
+    SubElement(root, "lockdata").text = "true"
+
+    if season_number:
+        SubElement(root, "season").text = str(season_number)
+        SubElement(root, "seasonnumber").text = str(season_number)
+    if episode_number:
+        SubElement(root, "episode").text = str(episode_number)
 
     plot_text = _build_episode_plot(talk)
     if plot_text:
@@ -216,12 +233,22 @@ def generate_episode_nfo(talk: Talk) -> Element:
     return root
 
 
-def write_episode_nfo(talk: Talk, video_path: Path) -> bool:
+def write_episode_nfo(
+    talk: Talk,
+    video_path: Path,
+    *,
+    season_number: int = 0,
+    episode_number: int = 0,
+) -> bool:
     """
     Write an episode NFO sidecar file alongside the video.
 
     The NFO file is named after the video file with a ``.nfo`` extension.
     Returns True on success, False on failure.
     """
-    root = generate_episode_nfo(talk)
+    root = generate_episode_nfo(
+        talk,
+        season_number=season_number,
+        episode_number=episode_number,
+    )
     return _write_xml(video_path.with_suffix(".nfo"), root)

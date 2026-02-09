@@ -9,9 +9,11 @@ from sys import stdout
 
 from fosdem_video.discovery import parse_ics_file, parse_schedule_xml
 from fosdem_video.download import (
+    _build_episode_index,
     create_dirs,
     download_fosdem_videos,
     is_downloaded,
+    regenerate_nfos,
 )
 
 logger = logging.getLogger(__name__)
@@ -94,6 +96,15 @@ def parse_arguments() -> argparse.Namespace:
         help="Print video URLs without downloading",
     )
     parser.add_argument(
+        "--regenerate-nfo",
+        action="store_true",
+        help=(
+            "Regenerate all .nfo metadata files for already-downloaded "
+            "videos without re-downloading them (requires --jellyfin "
+            "and --year)"
+        ),
+    )
+    parser.add_argument(
         "--log-level",
         default="INFO",
         choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
@@ -107,6 +118,12 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("--track requires --year")
     if args.talk and not args.year:
         parser.error("--talk requires --year")
+
+    # Validate --regenerate-nfo requires --jellyfin and --year
+    if args.regenerate_nfo and not args.jellyfin:
+        parser.error("--regenerate-nfo requires --jellyfin")
+    if args.regenerate_nfo and not args.year:
+        parser.error("--regenerate-nfo requires --year")
 
     # Validate ICS file exists when provided
     if args.ics and not args.ics.exists():
@@ -141,8 +158,32 @@ def main() -> None:
 
     logger.info("Found %s talks", len(talks))
 
+    # Build episode index from *all* discovered talks so that episode
+    # numbers remain stable regardless of which files are already downloaded.
+    episode_index = _build_episode_index(talks) if args.jellyfin else {}
+
+    # Regenerate NFOs for all talks (including already-downloaded) and exit
+    if args.regenerate_nfo:
+        regenerate_nfos(
+            talks,
+            args.output,
+            fmt=fmt,
+            episode_index=episode_index,
+        )
+        return
+
     # Filter already-downloaded talks
-    talks = [talk for talk in talks if not is_downloaded(args.output, talk, fmt, jellyfin=args.jellyfin)]
+    talks = [
+        talk
+        for talk in talks
+        if not is_downloaded(
+            args.output,
+            talk,
+            fmt,
+            jellyfin=args.jellyfin,
+            episode_index=episode_index,
+        )
+    ]
     logger.info("Found %s videos to download", len(talks))
 
     if args.dry_run:
@@ -150,7 +191,7 @@ def main() -> None:
         stdout.write(f"List of talks videos: \n{urls}\n")
         return
 
-    create_dirs(args.output, talks, jellyfin=args.jellyfin)
+    create_dirs(args.output, talks, jellyfin=args.jellyfin, episode_index=episode_index)
     results = download_fosdem_videos(
         talks,
         output_dir=args.output,
@@ -158,6 +199,7 @@ def main() -> None:
         num_workers=args.workers,
         no_vtt=args.no_vtt,
         jellyfin=args.jellyfin,
+        episode_index=episode_index,
     )
     successful = len([r for r in results if r])
     logger.info("Downloaded %s of %s talks", successful, len(talks))

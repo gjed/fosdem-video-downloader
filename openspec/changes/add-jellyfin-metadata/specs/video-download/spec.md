@@ -27,18 +27,20 @@ When `--jellyfin` is enabled and talks have rich metadata (year mode), the syste
 - `genre` — `Technology`
 - `tag` — `conference`, `open-source`
 - `uniqueid` (type `fosdem`) — `fosdem-<year>`
-- `namedseason` — one entry per track, sorted alphabetically
 
 **Season level** — `season.nfo` (root tag `<season>`) placed in each track directory `Fosdem (<year>)/<track>/`:
 
 - `title` — track name
-- `seasonnumber` — the track's position in the sorted track list
+- `seasonnumber` — the track's position in the sorted track list (1-based, alphabetical)
 - `plot` — a brief description identifying the track
 
 **Episode level** — `<slug>.nfo` (root tag `<episodedetails>`) placed alongside each downloaded video:
 
 - `title` — talk title
 - `showtitle` — `FOSDEM <year>`
+- `season` — track name (string)
+- `seasonnumber` — alphabetical index of the track (1-based integer)
+- `episode` — 1-based position of the talk within its track, ordered by schedule date and start time
 - `plot` — abstract, followed by description if present, followed by a metadata block containing slug, feedback URL, language, and event type
 - `aired` — talk date (ISO format)
 - `runtime` — duration in minutes
@@ -46,6 +48,8 @@ When `--jellyfin` is enabled and talks have rich metadata (year mode), the syste
 - `uniqueid` (type `fosdem`) — the talk slug
 - `trailer` — event URL
 - `director` — each person/speaker as a separate `<director>` element
+
+Episode numbering SHALL be computed by grouping talks by track, sorting each group by `(date, start)` from the schedule, and assigning consecutive 1-based numbers. Season numbering SHALL be the 1-based alphabetical index of the track name.
 
 #### Scenario: All three NFO levels generated in Jellyfin year mode
 
@@ -55,12 +59,17 @@ When `--jellyfin` is enabled and talks have rich metadata (year mode), the syste
 #### Scenario: Episode NFO content includes all mapped metadata
 
 - **WHEN** a talk has title, track, persons, abstract, date, and duration
-- **THEN** the episode NFO file contains the corresponding `<title>`, `<showtitle>`, `<director>`, `<plot>`, `<aired>`, and `<runtime>` elements
+- **THEN** the episode NFO file contains the corresponding `<title>`, `<showtitle>`, `<season>`, `<seasonnumber>`, `<episode>`, `<director>`, `<plot>`, `<aired>`, `<runtime>`, `<studio>`, `<uniqueid>`, and `<trailer>` elements
 
-#### Scenario: TVShow NFO lists all tracks as named seasons
+#### Scenario: Episodes are numbered in schedule order within each track
+
+- **WHEN** a track contains multiple talks scheduled across different days and times
+- **THEN** episodes are numbered sequentially by `(date, start)` so that the first talk of the track is episode 1, the second is episode 2, and so on
+
+#### Scenario: Seasons are numbered in alphabetical track order
 
 - **WHEN** multiple tracks are present in the download set
-- **THEN** the `tvshow.nfo` contains one `<namedseason>` element per track, numbered consecutively
+- **THEN** tracks are sorted alphabetically and assigned 1-based season numbers
 
 #### Scenario: NFO not generated in ICS mode
 
