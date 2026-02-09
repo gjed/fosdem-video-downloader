@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_WORKERS = 2
 DEFAULT_DELAY: float = 1.0  # seconds between each download per worker
 USER_AGENT = (
-    "fosdem-video-downloader/0.1.0 (+https://github.com/butlerx/fosdem-video-downloader)"
+    "fosdem-video-downloader/1.0.0 (+https://github.com/gjed/fosdem-video-downloader)"
 )
 
 # Retry strategy: back off on 429 (rate-limit) and server errors (500-503)
