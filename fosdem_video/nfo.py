@@ -148,9 +148,9 @@ def generate_season_nfo(
     SubElement(root, "title").text = track
     SubElement(root, "seasonnumber").text = str(season_number)
     SubElement(root, "lockdata").text = "true"
-    SubElement(
-        root, "plot"
-    ).text = f"FOSDEM {year} — {track} track.  All talks presented in the {track} developer room."
+    SubElement(root, "plot").text = (
+        f"FOSDEM {year} — {track} track.  All talks presented in the {track} developer room."
+    )
 
     return root
 

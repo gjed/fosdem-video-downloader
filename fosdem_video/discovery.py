@@ -55,7 +55,9 @@ def parse_ics_file(ics_path: Path, fmt: str = "mp4") -> list[Talk]:
         year, talk_id = get_path_elements(url)
         location_normalised = normalise_location(str(location))
 
-        video_url = f"https://video.fosdem.org/{year}/{location_normalised}/{talk_id}.{fmt}"
+        video_url = (
+            f"https://video.fosdem.org/{year}/{location_normalised}/{talk_id}.{fmt}"
+        )
 
         talks.append(Talk(video_url, year, talk_id, location_normalised))
 
@@ -124,7 +126,9 @@ def parse_schedule_xml(
                     else []
                 )
 
-                video_url = f"https://video.fosdem.org/{year}/{room_normalised}/{slug}.{fmt}"
+                video_url = (
+                    f"https://video.fosdem.org/{year}/{room_normalised}/{slug}.{fmt}"
+                )
                 talks.append(
                     Talk(
                         url=video_url,

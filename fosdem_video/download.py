@@ -14,7 +14,13 @@ import requests
 if TYPE_CHECKING:
     from pathlib import Path
 
-from fosdem_video.models import HTTP_NOT_FOUND, HTTP_OK, Talk, display_name, sanitise_path_component
+from fosdem_video.models import (
+    HTTP_NOT_FOUND,
+    HTTP_OK,
+    Talk,
+    display_name,
+    sanitise_path_component,
+)
 from fosdem_video.nfo import write_episode_nfo, write_season_nfo, write_tvshow_nfo
 
 logger = logging.getLogger(__name__)
