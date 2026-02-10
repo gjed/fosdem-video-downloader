@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import re
 from pathlib import Path
 from sys import stdout
 
@@ -12,6 +13,7 @@ from fosdem_video.download import (
     DEFAULT_DELAY,
     DEFAULT_WORKERS,
     _build_episode_index,
+    _build_track_season_map,
     create_dirs,
     download_fosdem_videos,
     is_downloaded,
@@ -46,6 +48,17 @@ def parse_arguments() -> argparse.Namespace:
         "--track",
         type=str,
         help="Filter talks by track name (requires --year)",
+    )
+    parser.add_argument(
+        "--tracks",
+        type=str,
+        help=(
+            "Filter talks by a range of track numbers based on alphabetical "
+            "order (requires --year). Format: START-END inclusive, e.g. "
+            "'1-32' downloads tracks 1 through 32. Use 'last' as END to "
+            "select everything from START onwards, e.g. '33-last'. "
+            "Use --dry-run to preview which tracks correspond to which numbers"
+        ),
     )
     parser.add_argument(
         "--talk",
@@ -120,24 +133,53 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     args = parser.parse_args()
+    _validate_args(parser, args)
+    return args
 
-    # Validate --track and --talk require --year
+
+def _validate_tracks_format(
+    parser: argparse.ArgumentParser,
+    tracks: str,
+) -> None:
+    """Validate that ``--tracks`` has the format ``START-END`` or ``START-last``."""
+    m = re.fullmatch(r"(\d+)-(last|\d+)", tracks)
+    if not m:
+        parser.error(
+            f"invalid --tracks format '{tracks}': expected START-END or START-last (e.g. '1-32' or '33-last')"
+        )
+    start = int(m.group(1))
+    if start < 1:
+        parser.error("--tracks range must start at 1 or higher")
+    if m.group(2) != "last" and int(m.group(2)) < start:
+        parser.error(f"invalid --tracks range '{tracks}': END must be >= START")
+
+
+def _validate_args(
+    parser: argparse.ArgumentParser,
+    args: argparse.Namespace,
+) -> None:
+    """Validate cross-argument constraints after parsing."""
+    # --track, --tracks, and --talk require --year
     if args.track and not args.year:
         parser.error("--track requires --year")
+    if args.tracks and not args.year:
+        parser.error("--tracks requires --year")
+    if args.track and args.tracks:
+        parser.error("--track and --tracks are mutually exclusive")
     if args.talk and not args.year:
         parser.error("--talk requires --year")
+    if args.tracks:
+        _validate_tracks_format(parser, args.tracks)
 
-    # Validate --regenerate-nfo requires --jellyfin and --year
+    # --regenerate-nfo requires --jellyfin and --year
     if args.regenerate_nfo and not args.jellyfin:
         parser.error("--regenerate-nfo requires --jellyfin")
     if args.regenerate_nfo and not args.year:
         parser.error("--regenerate-nfo requires --year")
 
-    # Validate ICS file exists when provided
+    # ICS file must exist when provided
     if args.ics and not args.ics.exists():
         parser.error(f"ICS file not found: {args.ics}")
-
-    return args
 
 
 def main() -> None:
@@ -165,9 +207,23 @@ def main() -> None:
         all_talks = parse_schedule_xml(args.year, fmt=fmt)
         talks = all_talks
 
-        # Apply --track / --talk filters *after* building the full list.
+        # Apply --track / --tracks / --talk filters *after* building the full list.
         if args.track:
             talks = [t for t in all_talks if t.track.lower() == args.track.lower()]
+        if args.tracks:
+            m = re.fullmatch(r"(\d+)-(last|\d+)", args.tracks)
+            start = int(m.group(1))  # type: ignore[union-attr]
+            track_season_map = _build_track_season_map(all_talks)
+            end = max(track_season_map.values()) if m.group(2) == "last" else int(m.group(2))  # type: ignore[union-attr]
+            selected_tracks = {name for name, num in track_season_map.items() if start <= num <= end}
+            # Log the resolved track names so the user knows what was selected
+            for name in sorted(selected_tracks, key=lambda n: track_season_map[n]):
+                logger.info(
+                    "Track %d: %s",
+                    track_season_map[name],
+                    name,
+                )
+            talks = [t for t in all_talks if t.track in selected_tracks]
         if args.talk:
             talks = [t for t in talks if t.id == args.talk]
 

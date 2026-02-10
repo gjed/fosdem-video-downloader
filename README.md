@@ -1,12 +1,13 @@
 # FOSDEM Video Downloader
 
-> **Please be kind to FOSDEM's infrastructure.** FOSDEM is a free, volunteer-run
-> conference. The video hosting servers are provided on a best-effort basis.
-> This tool ships with conservative defaults (2 concurrent workers, 1 s delay
-> between downloads, automatic retry with backoff) so it does not put
-> unnecessary load on those servers. Please do **not** crank up the concurrency
-> or remove the delay unless you know what you are doing. If you are downloading
-> a large number of talks, consider running the tool during off-peak hours.
+> 🤝 **Please be kind to FOSDEM's infrastructure.** FOSDEM is a free,
+> volunteer-run conference. The video hosting servers are provided on a
+> best-effort basis. This tool ships with conservative defaults (2 concurrent
+> workers, 1 s delay between downloads, automatic retry with backoff) so it
+> does not put unnecessary load on those servers. Please do **not** crank up the
+> concurrency or remove the delay unless you know what you are doing. If you are
+> downloading a large number of talks, consider running the tool during off-peak
+> hours.
 
 A Python tool to download FOSDEM conference videos. It supports two input
 modes: parsing an ICS schedule file (exported from the
@@ -14,7 +15,7 @@ modes: parsing an ICS schedule file (exported from the
 fetching the full FOSDEM schedule for a given year via the Pentabarf schedule
 XML.
 
-## Features
+## ✨ Features
 
 - Download from your **bookmarked talks** (ICS export) or an **entire year**
 - Filter by **track** or **single talk** slug
@@ -33,7 +34,7 @@ cd fosdem-video-downloader
 uv sync
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
 # From an ICS bookmarks file
@@ -111,7 +112,7 @@ fosdem_videos/
 3. Export bookmarks as an ICS file.
 4. Pass the file with `--ics bookmarks.ics`.
 
-## Server Politeness
+## 🐢 Server Politeness
 
 FOSDEM is a free, volunteer-run conference. This tool is designed to be a good
 citizen:

@@ -34,9 +34,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 DEFAULT_WORKERS = 2
 DEFAULT_DELAY: float = 1.0  # seconds between each download per worker
-USER_AGENT = (
-    "fosdem-video-downloader/1.0.0 (+https://github.com/gjed/fosdem-video-downloader)"
-)
+USER_AGENT = "fosdem-video-downloader/1.0.0 (+https://github.com/gjed/fosdem-video-downloader)"
 
 # Retry strategy: back off on 429 (rate-limit) and server errors (500-503)
 _RETRY_STRATEGY = Retry(
@@ -161,9 +159,7 @@ def get_output_path(
                 talk.track if talk.track else talk.location,
             )
             name = talk.id
-        return (
-            output_dir / f"Fosdem ({talk.year})" / season_folder / name / f"{name}.{fmt}"
-        )
+        return output_dir / f"Fosdem ({talk.year})" / season_folder / name / f"{name}.{fmt}"
     return output_dir / talk.year / f"{talk.id}.{fmt}"
 
 
@@ -244,6 +240,21 @@ def create_dirs(
             season_dirs_written.add(season_key)
 
 
+def _build_track_season_map(talks: list[Talk]) -> dict[str, int]:
+    """
+    Build a mapping from track name to 1-based season number.
+
+    Tracks are sorted alphabetically and assigned consecutive numbers
+    starting at 1.  Only talks with a non-empty ``track`` field are
+    considered.
+    """
+    track_names: set[str] = set()
+    for talk in talks:
+        if talk.track:
+            track_names.add(talk.track)
+    return {name: i for i, name in enumerate(sorted(track_names), start=1)}
+
+
 def _build_episode_index(
     talks: list[Talk],
 ) -> dict[str, tuple[int, int]]:
@@ -261,8 +272,7 @@ def _build_episode_index(
         if talk.track:
             by_track[talk.track].append(talk)
 
-    all_tracks = sorted(by_track)
-    track_to_season = {t: i for i, t in enumerate(all_tracks, start=1)}
+    track_to_season = _build_track_season_map(talks)
 
     index: dict[str, tuple[int, int]] = {}
     for track_name, track_talks in by_track.items():
