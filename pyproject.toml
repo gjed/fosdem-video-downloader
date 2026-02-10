@@ -21,7 +21,8 @@ build-backend = "hatchling.build"
 packages = ["fosdem_video"]
 
 [dependency-groups]
-dev = [{ include-group = "lint" }, { include-group = "typing" }]
+dev = [{ include-group = "lint" }, { include-group = "typing" }, { include-group = "test" }]
+test = ["pytest>=8.0.0", "pytest-cov>=6.0.0", "responses>=0.25.0"]
 lint = ["black>=24.9.0", "isort>=5.12.0", "ruff>=0.11.10"]
 typing = [
   "ty>=0.0.14",
@@ -40,6 +41,21 @@ profile = "black"
 possibly-missing-import = "error"
 unused-ignore-comment = "warn"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "unit: Unit tests (isolated function behaviour)",
+    "integration: Integration tests (cross-module workflows)",
+]
+
+[tool.coverage.run]
+source = ["fosdem_video"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+
 [tool.ruff]
 line-length = 110
 
@@ -57,3 +73,18 @@ ignore = [
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+  "S101",    # Use of assert — expected in tests
+  "D100",    # Missing module docstring
+  "D102",    # Missing docstring in public method
+  "D104",    # Missing docstring in public package
+  "PLR2004", # Magic value used in comparison
+  "TC003",   # Move stdlib import into TYPE_CHECKING block
+  "ARG002",  # Unused method argument (pytest fixtures)
+  "PT019",   # Fixture without value injected as parameter
+]
+"tests/conftest.py" = [
+  "PLR0913", # Too many arguments (factory helper)
+]
